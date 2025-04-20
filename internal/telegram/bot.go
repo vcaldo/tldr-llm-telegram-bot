@@ -27,7 +27,6 @@ func NewBot(ctx context.Context, config *config.Config) (Bot, error) {
 }
 
 func (b Bot) Start(ctx context.Context) error {
-	// Regiter command handlers
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "foo", bot.MatchTypeCommand, fooHandler)
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "bar", bot.MatchTypeCommandStartOnly, barHandler)
 
