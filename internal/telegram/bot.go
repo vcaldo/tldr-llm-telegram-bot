@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"database/sql"
 	"log"
 
 	"github.com/go-telegram/bot"
@@ -10,9 +11,10 @@ import (
 
 type Bot struct {
 	client *bot.Bot
+	db     *sql.DB
 }
 
-func NewBot(ctx context.Context, config *config.Config) (Bot, error) {
+func NewBot(ctx context.Context, config *config.Config, db *sql.DB) (Bot, error) {
 	opts := []bot.Option{
 		bot.WithDefaultHandler(defaultHandler),
 	}
@@ -23,7 +25,10 @@ func NewBot(ctx context.Context, config *config.Config) (Bot, error) {
 		return Bot{}, err
 	}
 
-	return Bot{client: client}, nil
+	return Bot{
+		client: client,
+		db:     db,
+	}, nil
 }
 
 func (b Bot) Start(ctx context.Context) error {

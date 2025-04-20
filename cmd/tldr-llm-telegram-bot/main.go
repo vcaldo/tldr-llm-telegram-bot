@@ -7,6 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/config"
+	"github.com/vcaldo/tldr-llm-telegram-bot/internal/db"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/telegram"
 )
 
@@ -20,7 +21,10 @@ func main() {
 		return
 	}
 
-	bot, err := telegram.NewBot(ctx, config)
+	db.InitDB(ctx, config)
+	log.Println("database initialized")
+
+	bot, err := telegram.NewBot(ctx, config, db.GetDB())
 	if err != nil {
 		log.Fatalf("error initializing bot: %v", err)
 		return

@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	TelegramBotToken string `envconfig:"TELEGRAM_BOT_TOKEN" required:"true"`
+	DatabaseURL      string `envconfig:"DATABASE_URL" required:"true"`
 }
 
 func LoadConfig() (*Config, error) {
