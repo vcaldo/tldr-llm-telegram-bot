@@ -9,7 +9,6 @@ import (
 
 type Config struct {
 	TelegramBotToken string `envconfig:"TELEGRAM_BOT_TOKEN" required:"true"`
-	DefaultLanguage  string `envconfig:"DEFAULT_LANGUAGE" default:"en"`
 }
 
 func LoadConfig() (*Config, error) {
