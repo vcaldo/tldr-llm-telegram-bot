@@ -1,0 +1,25 @@
+[summary]
+pt = '''
+Resuma de forma clara e concisa o conteúdo deste chat do Telegram em português:
+'''
+
+en = '''
+Provide a clear and concise summary of this Telegram chat in English:
+'''
+
+es = '''
+Resume de forma clara y concisa el contenido de este chat de Telegram en español:
+'''
+
+[problematic]
+pt = '''
+Analise este chat do Telegram em português e identifique qualquer conteúdo problemático:
+'''
+
+en = '''
+Analyze this Telegram chat in English and identify any problematic content:
+'''
+
+es = '''
+Analiza este chat de Telegram en español e identifica cualquier contenido problemático:
+'''
