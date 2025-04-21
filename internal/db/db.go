@@ -54,6 +54,7 @@ func ensureTablesExist(ctx context.Context) {
 			first_name TEXT,
 			last_name TEXT,
 			username TEXT,
+			display_name TEXT,
 			content JSONB NOT NULL,
 			moderated BOOLEAN DEFAULT FALSE
 		);`,

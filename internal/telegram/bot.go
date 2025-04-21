@@ -45,9 +45,24 @@ func (b Bot) Start(ctx context.Context) error {
 		return err
 	}
 
+	llm.LoadPrompts(config.PromptsPath)
+	if err != nil {
+		log.Printf("error loading prompts: %v", err)
+	}
+
+	summaryPrompt, err := llm.GetPrompt("summary", config.Language)
+	if err != nil {
+		log.Fatalf("Failed to get prompt: %v", err)
+	}
+
+	problematicPrompt, err := llm.GetPrompt("problematic", config.Language)
+	if err != nil {
+		log.Fatalf("Failed to get prompt: %v", err)
+	}
+
 	// Register commands
-	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/tldr", bot.MatchTypePrefix, tldrHandler(llmClient))
-	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/problematic", bot.MatchTypePrefix, problematicSpeechHandler(llmClient))
+	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/tldr", bot.MatchTypePrefix, tldrHandler(llmClient, summaryPrompt))
+	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/problematic", bot.MatchTypePrefix, problematicSpeechHandler(llmClient, problematicPrompt))
 
 	b.client.Start(ctx)
 	return nil

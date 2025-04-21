@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -17,10 +18,12 @@ type Config struct {
 	GeminiApiUrl     string `envconfig:"GEMINI_API_URL"`
 	GeminiModel      string `envconfig:"GEMINI_MODEL"`
 	GeminiApiKey     string `envconfig:"GEMINI_API_KEY"`
+	PromptsPath      string `envconfig:"PROMPTS_PATH"`
 }
 
 func LoadConfig() (*Config, error) {
-	err := godotenv.Load()
+
+	err := godotenv.Load(os.Getenv("ENV_FILE_PATH"))
 	if err != nil {
 		log.Printf("error loading .env file: %v", err)
 		return nil, err

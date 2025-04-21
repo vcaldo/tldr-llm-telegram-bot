@@ -1,0 +1,19 @@
+# Ignore the build artifacts
+/bin
+/build
+
+# Ignore the .env file
+.env
+
+# Ignore the Dockerfile and docker-compose.yml if they are not needed for the build context
+Dockerfile
+docker-compose.yml
+
+# Ignore any temporary files
+*.tmp
+*.log
+*.bak
+
+# Ignore IDE specific files
+.vscode/
+.idea/
