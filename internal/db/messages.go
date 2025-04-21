@@ -28,8 +28,8 @@ func LogMessage(ctx context.Context, db *sql.DB, MessageType string, update *mod
 	messageTime := time.Unix(int64(update.Message.Date), 0)
 
 	query := `
-		INSERT INTO messages (message_id, message_type, timestamp, chat_id, user_id, reply_to_message_id, first_name, last_name, username, content)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+		INSERT INTO messages (message_id, message_type, timestamp, chat_id, user_id, reply_to_message_id, first_name, last_name, username, content, moderated)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
 	_, err = db.ExecContext(ctx, query,
 		update.Message.ID,
@@ -42,6 +42,7 @@ func LogMessage(ctx context.Context, db *sql.DB, MessageType string, update *mod
 		update.Message.From.LastName,
 		update.Message.From.Username,
 		contentJSON,
+		false,
 	)
 
 	return err

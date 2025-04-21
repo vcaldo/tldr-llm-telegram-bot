@@ -22,6 +22,7 @@ func main() {
 	}
 
 	db.InitDB(ctx, config)
+	defer db.CloseDB()
 	log.Println("database initialized")
 
 	bot, err := telegram.NewBot(ctx, config, db.GetDB())

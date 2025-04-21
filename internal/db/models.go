@@ -13,4 +13,5 @@ type Message struct {
 	LastName         string    `json:"last_name"`
 	Username         string    `json:"username"`
 	Content          string    `json:"content"`
+	Moderated        bool      `json:"moderated"`
 }

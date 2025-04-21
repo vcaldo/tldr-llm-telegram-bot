@@ -34,6 +34,13 @@ func GetDB() *sql.DB {
 	return db
 }
 
+func CloseDB() {
+	if err := db.Close(); err != nil {
+		log.Fatalf("error closing the database: %v", err)
+	}
+	log.Println("database connection closed.")
+}
+
 func ensureTablesExist(ctx context.Context) {
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS messages (
@@ -47,12 +54,14 @@ func ensureTablesExist(ctx context.Context) {
 			first_name TEXT,
 			last_name TEXT,
 			username TEXT,
-			content JSONB NOT NULL
+			content JSONB NOT NULL,
+			moderated BOOLEAN DEFAULT FALSE
 		);`,
-		`CREATE INDEX IF NOT EXISTS idx_message_id ON messages (message_id);`,
 		`CREATE INDEX IF NOT EXISTS idx_timestamp ON messages (timestamp);`,
-		`CREATE INDEX IF NOT EXISTS idx_message_type ON messages (message_type);`,
+		`CREATE INDEX IF NOT EXISTS idx_message_id ON messages (message_id);`,
 		`CREATE INDEX IF NOT EXISTS idx_chat_id ON messages (chat_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_message_type ON messages (message_type);`,
+		`CREATE INDEX IF NOT EXISTS idx_moderated ON messages (moderated);`,
 	}
 
 	for _, query := range queries {
@@ -62,5 +71,5 @@ func ensureTablesExist(ctx context.Context) {
 		}
 	}
 
-	log.Println("all tables ensured to exist")
+	log.Println("all tables and indexes ensured to exist")
 }
