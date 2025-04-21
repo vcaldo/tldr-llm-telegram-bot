@@ -51,7 +51,7 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 			return
 		}
 
-		messages, err := db.FetchMessagesSince(ctx, db.GetDB(), update.Message.Chat.ID, int64(update.Message.ReplyToMessage.ID), firstMessageTimestamp, 5*time.Minute)
+		messages, err := db.FetchMessagesSince(ctx, db.GetDB(), update.Message.Chat.ID, int64(update.Message.ReplyToMessage.ID), firstMessageTimestamp, 60*time.Minute)
 		if err != nil {
 			log.Printf("error fetching messages: %v", err)
 			return
