@@ -60,6 +60,7 @@ func FetchMessagesSince(ctx context.Context, db *sql.DB, chatID, messageID int64
 		WHERE chat_id = $1
 		  AND timestamp BETWEEN $2 AND $3
 		  AND message_id >= $4
+		ORDER BY timestamp DESC
 		LIMIT 4000`
 
 	rows, err := db.QueryContext(ctx, query, chatID, since, endTime, messageID)
@@ -99,7 +100,8 @@ func FetchUnmoderatedMessages(ctx context.Context, db *sql.DB, chatID int64) ([]
 	query := `
 		SELECT message_id, message_type, timestamp, chat_id, user_id, reply_to_message_id, first_name, last_name, username, display_name, content, moderated
 		FROM messages
-		WHERE chat_id = $1 AND moderated = false`
+		WHERE chat_id = $1 AND moderated = false
+		ORDER BY timestamp DESC`
 
 	rows, err := db.QueryContext(ctx, query, chatID)
 	if err != nil {

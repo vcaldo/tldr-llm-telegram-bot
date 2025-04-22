@@ -84,8 +84,24 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 
 func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
-		// implement the logic to handle problematic speech
-		prompt := fmt.Sprintf("%s %s", problematicPrompt, update.Message.Text)
+		if update.Message.Text == "" {
+			return
+		}
+
+		messages, err := db.FetchUnmoderatedMessages(ctx, db.GetDB(), update.Message.Chat.ID)
+		if err != nil {
+			log.Printf("error fetching messages: %v", err)
+			return
+		}
+
+		if len(messages) == 0 {
+			log.Printf("no unmoderated messages found")
+			return
+		}
+
+		formattedMessages := formatTextMessages(messages)
+
+		prompt := fmt.Sprintf("%s %s", problematicPrompt, formattedMessages)
 		problematicContent, err := llmClient.AnalyzePrompt(prompt)
 
 		if err != nil {
@@ -103,14 +119,13 @@ func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string)
 		}
 	}
 }
-
 func getMessageTimestamp(db *sql.DB, messageID int64, groupID int64) (*time.Time, error) {
 	query := `SELECT timestamp FROM messages WHERE message_id = $1 AND chat_id = $2`
 	row := db.QueryRow(query, messageID, groupID)
 	var timestamp time.Time
 	if err := row.Scan(&timestamp); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, fmt.Errorf("message with ID %d not found in chat %d", messageID, groupID)
 		}
 		return nil, err
 	}
