@@ -85,10 +85,10 @@ func (g *GeminiClient) AnalyzePrompt(prompt string) (reponse string, err error) 
 	// Create the model
 	model := client.GenerativeModel(g.ModelName)
 
-	model.SetTemperature(0.3)
+	model.SetTemperature(0.9)
 	model.SetTopK(40)
 	model.SetTopP(0.95)
-	model.SetMaxOutputTokens(2048)
+	model.SetMaxOutputTokens(4096)
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()

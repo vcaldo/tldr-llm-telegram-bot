@@ -51,7 +51,7 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 			return
 		}
 
-		messages, err := db.FetchMessagesSince(ctx, db.GetDB(), update.Message.Chat.ID, int64(update.Message.ReplyToMessage.ID), firstMessageTimestamp, 60*time.Minute)
+		messages, err := db.FetchMessagesSince(ctx, db.GetDB(), update.Message.Chat.ID, int64(update.Message.ReplyToMessage.ID), firstMessageTimestamp, 720*time.Minute)
 		if err != nil {
 			log.Printf("error fetching messages: %v", err)
 			return
@@ -72,7 +72,6 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 		}
 
 		log.Printf("generated summary: %s", summary)
-		// Send the summary back to the user
 		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID:    update.Message.Chat.ID,
 			Text:      summary,
