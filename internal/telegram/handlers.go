@@ -85,25 +85,26 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 
-		return
+		log.Printf("problematic speech handler triggered")
 		// implement the logic to handle problematic speech
-	// 	prompt := fmt.Sprintf("%s %s", problematicPrompt, update.Message.Text)
-	// 	problematicContent, err := llmClient.AnalyzePrompt(prompt)
+		// 	prompt := fmt.Sprintf("%s %s", problematicPrompt, update.Message.Text)
+		// 	problematicContent, err := llmClient.AnalyzePrompt(prompt)
 
-	// 	if err != nil {
-	// 		log.Printf("error generating problematic content: %v", err)
-	// 		return
-	// 	}
+		// 	if err != nil {
+		// 		log.Printf("error generating problematic content: %v", err)
+		// 		return
+		// 	}
 
-	// 	log.Printf("generated problematic content: %s", problematicContent)
-	// 	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
-	// 		ChatID:    update.Message.Chat.ID,
-	// 		Text:      problematicContent,
-	// 		ParseMode: "html",
-	// 	}); err != nil {
-	// 		log.Printf("error sending message: %v", err)
-	// 	}
-	// }
+		// 	log.Printf("generated problematic content: %s", problematicContent)
+		// 	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		// 		ChatID:    update.Message.Chat.ID,
+		// 		Text:      problematicContent,
+		// 		ParseMode: "html",
+		// 	}); err != nil {
+		// 		log.Printf("error sending message: %v", err)
+		// 	}
+		// }
+	}
 }
 
 func getMessageTimestamp(db *sql.DB, messageID int64, groupID int64) (*time.Time, error) {
