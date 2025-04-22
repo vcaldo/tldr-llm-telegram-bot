@@ -46,9 +46,6 @@ func (b Bot) Start(ctx context.Context) error {
 	}
 
 	llm.LoadPrompts(config.PromptsPath)
-	if err != nil {
-		log.Printf("error loading prompts: %v", err)
-	}
 
 	summaryPrompt, err := llm.GetPrompt("summary", config.Language)
 	if err != nil {

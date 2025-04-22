@@ -59,8 +59,9 @@ func FetchMessagesSince(ctx context.Context, db *sql.DB, chatID, messageID int64
 		FROM messages
 		WHERE chat_id = $1
 		  AND timestamp BETWEEN $2 AND $3
-		  AND message_id >= $4`
-	log.Printf(query, chatID, since, endTime, messageID)
+		  AND message_id >= $4
+		LIMIT 4000`
+
 	rows, err := db.QueryContext(ctx, query, chatID, since, endTime, messageID)
 	if err != nil {
 		return nil, err
