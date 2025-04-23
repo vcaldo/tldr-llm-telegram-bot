@@ -27,7 +27,7 @@ type OllamaClient struct {
 }
 
 func (o *OllamaClient) AnalyzePrompt(nrApp *newrelic.Application, prompt string) (response string, err error) {
-	txn := nrApp.StartTransaction("OllamaClient.AnalyzePrompt")
+	txn := nrApp.StartTransaction("ollama:analyze-prompt")
 	defer txn.End()
 
 	txn.AddAttribute("model", o.ModelName)
@@ -51,7 +51,7 @@ func (o *OllamaClient) AnalyzePrompt(nrApp *newrelic.Application, prompt string)
 
 	req.Header.Set("Content-Type", "application/json")
 
-	segment := txn.StartSegment("OllamaAPI.Request")
+	segment := txn.StartSegment("ollama:send-request")
 	resp, err := o.HTTPClient.Do(req)
 	segment.End()
 
@@ -93,7 +93,7 @@ type GeminiClient struct {
 }
 
 func (g *GeminiClient) AnalyzePrompt(nrApp *newrelic.Application, prompt string) (response string, err error) {
-	txn := nrApp.StartTransaction("GeminiClient.AnalyzePrompt")
+	txn := nrApp.StartTransaction("gemini:analyze-prompt")
 	defer txn.End()
 
 	txn.AddAttribute("model", g.ModelName)
@@ -118,7 +118,7 @@ func (g *GeminiClient) AnalyzePrompt(nrApp *newrelic.Application, prompt string)
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	segment := txn.StartSegment("GeminiAPI.GenerateContent")
+	segment := txn.StartSegment("gemini:generate-content")
 	resp, err := model.GenerateContent(ctxWithTimeout, genai.Text(prompt))
 	segment.End()
 

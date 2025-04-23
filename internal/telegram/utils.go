@@ -62,7 +62,7 @@ func getMessageTimestamp(db *sql.DB, messageID int64, groupID int64) (*time.Time
 
 func SendLongMessage(ctx context.Context, nrApp *newrelic.Application, b *bot.Bot, chatID int64, text string) {
 	// Create a New Relic transaction
-	txn := nrApp.StartTransaction("SendLongMessage")
+	txn := nrApp.StartTransaction("telegram:send-long-message")
 	defer txn.End()
 
 	// Add transaction attributes
@@ -73,7 +73,7 @@ func SendLongMessage(ctx context.Context, nrApp *newrelic.Application, b *bot.Bo
 	txnCtx := newrelic.NewContext(ctx, txn)
 
 	if len(text) <= telegramMaxMessageLength {
-		segment := txn.StartSegment("SendSingleMessage")
+		segment := txn.StartSegment("telegram:send-message")
 		if _, err := b.SendMessage(txnCtx, &bot.SendMessageParams{
 			ChatID:    chatID,
 			Text:      text,
@@ -88,7 +88,7 @@ func SendLongMessage(ctx context.Context, nrApp *newrelic.Application, b *bot.Bo
 
 	runes := []rune(text)
 	for i := 0; i < len(runes); i += telegramMaxMessageLength {
-		segment := txn.StartSegment("SendMessageChunk")
+		segment := txn.StartSegment("telegram:send-message-chunk")
 
 		end := i + telegramMaxMessageLength
 		if end > len(runes) {

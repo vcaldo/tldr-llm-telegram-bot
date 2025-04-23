@@ -15,12 +15,8 @@ import (
 )
 
 func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	// O contexto já contém a transação New Relic
-
-	// Para instrumentar operações específicas, extraia a transação do contexto
 	txn := newrelic.FromContext(ctx)
 
-	// Segmento para operações de log no DB
 	segDB := txn.StartSegment("db:log-message")
 	var err error
 	switch {
@@ -55,7 +51,7 @@ func tldrHandler(nrApp *newrelic.Application, llmClient llm.LLMClient, summaryPr
 		if update.Message.Text == "" || update.Message.ReplyToMessage == nil {
 			return
 		}
-		txn := nrApp.StartTransaction("command-tldr")
+		txn := nrApp.StartTransaction("handler:tldr")
 		defer txn.End()
 
 		txn.AddAttribute("chatID", update.Message.Chat.ID)
@@ -105,7 +101,7 @@ func problematicSpeechHandler(nrApp *newrelic.Application, llmClient llm.LLMClie
 			return
 		}
 
-		txn := nrApp.StartTransaction("problematic-speech-moderation")
+		txn := nrApp.StartTransaction("handler:problematic-speech-moderation")
 		defer txn.End()
 
 		txn.AddAttribute("chatID", update.Message.Chat.ID)
@@ -153,7 +149,7 @@ func problematicSpeechHandler(nrApp *newrelic.Application, llmClient llm.LLMClie
 
 func valueAssessment(nrApp *newrelic.Application, llmClient llm.LLMClient, valueAssessmentPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
-		txn := nrApp.StartTransaction("value-assessment")
+		txn := nrApp.StartTransaction("handler:value-assessment")
 		defer txn.End()
 
 		txn.AddAttribute("chatID", update.Message.Chat.ID)
