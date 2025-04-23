@@ -97,14 +97,13 @@ func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string)
 		formattedMessages := formatTextMessages(messages)
 
 		prompt := fmt.Sprintf("%s %s", problematicPrompt, formattedMessages)
-    
+
 		problematicContent, err := llmClient.AnalyzePrompt(prompt)
 		if err != nil {
-		 		log.Printf("error generating problematic content: %v", err)
-		 		return
-	 	}
+			log.Printf("error generating problematic content: %v", err)
+			return
+		}
 
-		log.Printf("generated problematic content: %v", len(problematicContent))
 		if len(problematicContent) > 4 {
 			SendLongMessage(ctx, b, update.Message.Chat.ID, problematicContent)
 		}
