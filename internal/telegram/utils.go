@@ -61,32 +61,51 @@ func getMessageTimestamp(db *sql.DB, messageID int64, groupID int64) (*time.Time
 }
 
 func SendLongMessage(ctx context.Context, nrApp *newrelic.Application, b *bot.Bot, chatID int64, text string) {
+	// Create a New Relic transaction
+	txn := nrApp.StartTransaction("SendLongMessage")
+	defer txn.End()
+
+	// Add transaction attributes
+	txn.AddAttribute("chatID", chatID)
+	txn.AddAttribute("messageLength", len(text))
+
+	// Create a context with the transaction
+	txnCtx := newrelic.NewContext(ctx, txn)
+
 	if len(text) <= telegramMaxMessageLength {
-		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		segment := txn.StartSegment("SendSingleMessage")
+		if _, err := b.SendMessage(txnCtx, &bot.SendMessageParams{
 			ChatID:    chatID,
 			Text:      text,
 			ParseMode: models.ParseModeHTML,
 		}); err != nil {
+			txn.NoticeError(err)
 			log.Printf("error sending message %v", err)
 		}
+		segment.End()
 		return
 	}
 
 	runes := []rune(text)
 	for i := 0; i < len(runes); i += telegramMaxMessageLength {
+		segment := txn.StartSegment("SendMessageChunk")
+
 		end := i + telegramMaxMessageLength
 		if end > len(runes) {
 			end = len(runes)
 		}
 		messageChunk := string(runes[i:end])
 
-		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		if _, err := b.SendMessage(txnCtx, &bot.SendMessageParams{
 			ChatID:    chatID,
 			Text:      messageChunk,
 			ParseMode: models.ParseModeHTML,
 		}); err != nil {
+			txn.NoticeError(err)
 			log.Printf("error sending message chunk: %v", err)
+			segment.End()
 			return
 		}
+		segment.End()
 	}
 }
