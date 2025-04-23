@@ -57,9 +57,15 @@ func (b Bot) Start(ctx context.Context) error {
 		log.Fatalf("Failed to get prompt: %v", err)
 	}
 
+	valueAssessmentPrompt, err := llm.GetPrompt("value_assessment", config.Language)
+	if err != nil {
+		log.Fatalf("Failed to get prompt: %v", err)
+	}
+
 	// Register commands
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/tldr", bot.MatchTypePrefix, tldrHandler(llmClient, summaryPrompt))
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/problematic", bot.MatchTypePrefix, problematicSpeechHandler(llmClient, problematicPrompt))
+	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/valeapena", bot.MatchTypePrefix, valueAssessment(llmClient, valueAssessmentPrompt))
 
 	b.client.Start(ctx)
 	return nil

@@ -2,8 +2,10 @@ package telegram
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -42,6 +44,19 @@ func formatTextMessages(messages []db.Message) string {
 	}
 
 	return formattedMessages
+}
+
+func getMessageTimestamp(db *sql.DB, messageID int64, groupID int64) (*time.Time, error) {
+	query := `SELECT timestamp FROM messages WHERE message_id = $1 AND chat_id = $2`
+	row := db.QueryRow(query, messageID, groupID)
+	var timestamp time.Time
+	if err := row.Scan(&timestamp); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("message with ID %d not found in chat %d", messageID, groupID)
+		}
+		return nil, err
+	}
+	return &timestamp, nil
 }
 
 func SendLongMessage(ctx context.Context, b *bot.Bot, chatID int64, text string) {
