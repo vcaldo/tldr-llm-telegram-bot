@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"log"
 
+	_ "github.com/newrelic/go-agent/v3/integrations/nrpq"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/config"
 
 	_ "github.com/lib/pq"
@@ -12,9 +14,9 @@ import (
 
 var db *sql.DB
 
-func InitDB(ctx context.Context, config *config.Config) {
+func InitDB(ctx context.Context, config *config.Config, nrApp *newrelic.Application) {
 	var err error
-	db, err = sql.Open("postgres", config.DatabaseURL)
+	db, err = sql.Open("nrpostgres", config.DatabaseURL)
 	if err != nil {
 		log.Fatalf("error connecting to database: %v", err)
 		return

@@ -12,6 +12,8 @@ require (
 	github.com/google/generative-ai-go v0.19.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lib/pq v1.10.9
+	github.com/newrelic/go-agent/v3 v3.38.0
+	github.com/newrelic/go-agent/v3/integrations/nrpq v1.1.1
 	google.golang.org/api v0.229.0
 )
 

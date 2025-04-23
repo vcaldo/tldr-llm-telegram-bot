@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/constants"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/db"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/llm"
@@ -38,11 +39,18 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	}
 }
 
-func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
+func tldrHandler(nrApp *newrelic.Application, llmClient llm.LLMClient, summaryPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 		if update.Message.Text == "" || update.Message.ReplyToMessage == nil {
 			return
 		}
+		txn := nrApp.StartTransaction("command-tldr")
+		defer txn.End()
+
+		txn.AddAttribute("chatID", update.Message.Chat.ID)
+		txn.AddAttribute("userID", update.Message.From.ID)
+
+		ctxWithTxn := newrelic.NewContext(ctx, txn)
 
 		firstMessageTimestamp, err := getMessageTimestamp(db.GetDB(), int64(update.Message.ReplyToMessage.ID), update.Message.Chat.ID)
 		if err != nil {
@@ -50,7 +58,7 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 			return
 		}
 
-		messages, err := db.FetchMessagesSince(ctx, db.GetDB(), update.Message.Chat.ID, int64(update.Message.ReplyToMessage.ID), firstMessageTimestamp, 720*time.Minute)
+		messages, err := db.FetchMessagesSince(ctxWithTxn, db.GetDB(), update.Message.Chat.ID, int64(update.Message.ReplyToMessage.ID), firstMessageTimestamp, 720*time.Minute)
 		if err != nil {
 			log.Printf("error fetching messages: %v", err)
 			return
@@ -60,6 +68,8 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 			log.Printf("no messages found since %v", firstMessageTimestamp)
 			return
 		}
+
+		txn.AddAttribute("messagesCount", len(messages))
 
 		formattedMessages := formatTextMessages(messages)
 		prompt := fmt.Sprintf("%s %s", summaryPrompt, formattedMessages)

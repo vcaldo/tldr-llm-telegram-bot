@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/go-telegram/bot"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/config"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/llm"
 )
@@ -13,9 +14,10 @@ import (
 type Bot struct {
 	client *bot.Bot
 	db     *sql.DB
+	Nrapp  *newrelic.Application
 }
 
-func NewBot(ctx context.Context, config *config.Config, db *sql.DB) (Bot, error) {
+func NewBot(ctx context.Context, config *config.Config, db *sql.DB, nrApp *newrelic.Application) (Bot, error) {
 	opts := []bot.Option{
 		bot.WithDefaultHandler(defaultHandler),
 	}
@@ -29,6 +31,7 @@ func NewBot(ctx context.Context, config *config.Config, db *sql.DB) (Bot, error)
 	return Bot{
 		client: client,
 		db:     db,
+		Nrapp:  nrApp,
 	}, nil
 }
 
@@ -37,6 +40,11 @@ func (b Bot) Start(ctx context.Context) error {
 	if err != nil {
 		log.Fatalf("error loading config: %v", err)
 	}
+
+	txn := b.Nrapp.StartTransaction("bot-startup")
+	defer txn.End()
+
+	ctxWithTxn := newrelic.NewContext(ctx, txn)
 
 	llmClient, err := llm.NewLLMClient(config)
 	if err != nil {
@@ -63,10 +71,10 @@ func (b Bot) Start(ctx context.Context) error {
 	}
 
 	// Register commands
-	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/tldr", bot.MatchTypePrefix, tldrHandler(llmClient, summaryPrompt))
+	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/tldr", bot.MatchTypePrefix, tldrHandler(b.Nrapp, llmClient, summaryPrompt))
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/problematic", bot.MatchTypePrefix, problematicSpeechHandler(llmClient, problematicPrompt))
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/valeapena", bot.MatchTypePrefix, valueAssessment(llmClient, valueAssessmentPrompt))
 
-	b.client.Start(ctx)
+	b.client.Start(ctxWithTxn)
 	return nil
 }
