@@ -1,11 +1,17 @@
 package telegram
 
 import (
+	"context"
 	"fmt"
+	"log"
 
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/constants"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/db"
 )
+
+const telegramMaxMessageLength = 4096
 
 func formatTextMessages(messages []db.Message) string {
 	var formattedMessages string
@@ -36,4 +42,36 @@ func formatTextMessages(messages []db.Message) string {
 	}
 
 	return formattedMessages
+}
+
+func SendLongMessage(ctx context.Context, b *bot.Bot, chatID int64, text string) {
+	if len(text) <= telegramMaxMessageLength {
+		// Envia a mensagem inteira se for menor ou igual ao limite
+		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID:    chatID,
+			Text:      text,
+			ParseMode: models.ParseModeHTML,
+		}); err != nil {
+			log.Printf("error sending message %v", err)
+		}
+		return
+	}
+
+	runes := []rune(text)
+	for i := 0; i < len(runes); i += telegramMaxMessageLength {
+		end := i + telegramMaxMessageLength
+		if end > len(runes) {
+			end = len(runes)
+		}
+		messageChunk := string(runes[i:end])
+
+		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID:    chatID,
+			Text:      messageChunk,
+			ParseMode: models.ParseModeHTML,
+		}); err != nil {
+			log.Printf("error sending message chunk: %v", err)
+			return
+		}
+	}
 }

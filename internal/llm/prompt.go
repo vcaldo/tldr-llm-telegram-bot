@@ -9,7 +9,7 @@ import (
 type Prompts struct {
 	Summary     map[string]string `toml:"summary"`
 	Problematic map[string]string `toml:"problematic"`
-	HugeChat    map[string]string `toml:"huge_chat"`
+	Chat        map[string]string `toml:"chat"`
 }
 
 var prompts Prompts
@@ -31,8 +31,8 @@ func GetPrompt(category, lang string) (string, error) {
 		if prompt, ok := prompts.Problematic[lang]; ok {
 			return prompt, nil
 		}
-	case "huge_chat":
-		if prompt, ok := prompts.HugeChat[lang]; ok {
+	case "chat":
+		if prompt, ok := prompts.Chat[lang]; ok {
 			return prompt, nil
 		}
 	}

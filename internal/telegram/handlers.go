@@ -72,13 +72,8 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 		}
 
 		log.Printf("generated summary: %s", summary)
-		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID:    update.Message.Chat.ID,
-			Text:      summary,
-			ParseMode: "html",
-		}); err != nil {
-			log.Printf("error sending message: %v", err)
-		}
+
+		SendLongMessage(ctx, b, update.Message.Chat.ID, summary)
 	}
 }
 
@@ -109,13 +104,14 @@ func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string)
 			return
 		}
 
-		log.Printf("generated problematic content: %s", problematicContent)
-		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID:    update.Message.Chat.ID,
-			Text:      problematicContent,
-			ParseMode: "html",
-		}); err != nil {
-			log.Printf("error sending message: %v", err)
+		log.Printf("generated problematic content: %v", len(problematicContent))
+		if len(problematicContent) > 4 {
+			SendLongMessage(ctx, b, update.Message.Chat.ID, problematicContent)
+		}
+
+		// set the messages as moderated
+		if err := db.SetMessagesModerated(ctx, db.GetDB(), messages); err != nil {
+			log.Printf("error setting messages as moderated: %v", err)
 		}
 	}
 }
