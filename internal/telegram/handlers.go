@@ -115,6 +115,8 @@ func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string)
 
 func valueAssessment(llmClient llm.LLMClient, valueAssessmentPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
+		db.LogMessage(ctx, db.GetDB(), constants.MessageTypeText, update, update.Message.Text)
+
 		if update.Message.Text == "" {
 			return
 		}
