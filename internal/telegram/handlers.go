@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"time"
@@ -113,15 +112,29 @@ func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string)
 		}
 	}
 }
-func getMessageTimestamp(db *sql.DB, messageID int64, groupID int64) (*time.Time, error) {
-	query := `SELECT timestamp FROM messages WHERE message_id = $1 AND chat_id = $2`
-	row := db.QueryRow(query, messageID, groupID)
-	var timestamp time.Time
-	if err := row.Scan(&timestamp); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("message with ID %d not found in chat %d", messageID, groupID)
+
+func valueAssessment(llmClient llm.LLMClient, valueAssessmentPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
+	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
+		if update.Message.Text == "" {
+			return
 		}
-		return nil, err
+
+		log.Printf("Received message: %s", update.Message.Text)
+
+		prompt := fmt.Sprintf("%s %s", valueAssessmentPrompt, update.Message.Text)
+
+		log.Printf("Generated prompt: %s", prompt)
+
+		valueAssessmentContent, err := llmClient.AnalyzePrompt(prompt)
+
+		log.Printf("Generated value assessment content: %s", valueAssessmentContent)
+
+		if err != nil {
+			log.Printf("error generating value assessment content: %v", err)
+			return
+		}
+
+		SendLongMessage(ctx, b, update.Message.Chat.ID, valueAssessmentContent)
+
 	}
-	return &timestamp, nil
 }
