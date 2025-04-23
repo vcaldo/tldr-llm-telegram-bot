@@ -7,7 +7,7 @@ import (
 
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/config"
 
-	_ "github.com/lib/pq" // PostgreSQL driver
+	_ "github.com/lib/pq"
 )
 
 var db *sql.DB

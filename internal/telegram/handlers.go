@@ -72,48 +72,55 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 		}
 
 		log.Printf("generated summary: %s", summary)
-		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID:    update.Message.Chat.ID,
-			Text:      summary,
-			ParseMode: "html",
-		}); err != nil {
-			log.Printf("error sending message: %v", err)
-		}
+
+		SendLongMessage(ctx, b, update.Message.Chat.ID, summary)
 	}
 }
 
 func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
+		if update.Message.Text == "" {
+			return
+		}
 
-		log.Printf("problematic speech handler triggered")
-		// implement the logic to handle problematic speech
-		// 	prompt := fmt.Sprintf("%s %s", problematicPrompt, update.Message.Text)
-		// 	problematicContent, err := llmClient.AnalyzePrompt(prompt)
+		messages, err := db.FetchUnmoderatedMessages(ctx, db.GetDB(), update.Message.Chat.ID)
+		if err != nil {
+			log.Printf("error fetching messages: %v", err)
+			return
+		}
 
-		// 	if err != nil {
-		// 		log.Printf("error generating problematic content: %v", err)
-		// 		return
-		// 	}
+		if len(messages) == 0 {
+			log.Printf("no unmoderated messages found")
+			return
+		}
 
-		// 	log.Printf("generated problematic content: %s", problematicContent)
-		// 	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		// 		ChatID:    update.Message.Chat.ID,
-		// 		Text:      problematicContent,
-		// 		ParseMode: "html",
-		// 	}); err != nil {
-		// 		log.Printf("error sending message: %v", err)
-		// 	}
-		// }
+		formattedMessages := formatTextMessages(messages)
+
+		prompt := fmt.Sprintf("%s %s", problematicPrompt, formattedMessages)
+    
+		problematicContent, err := llmClient.AnalyzePrompt(prompt)
+		if err != nil {
+		 		log.Printf("error generating problematic content: %v", err)
+		 		return
+	 	}
+
+		log.Printf("generated problematic content: %v", len(problematicContent))
+		if len(problematicContent) > 4 {
+			SendLongMessage(ctx, b, update.Message.Chat.ID, problematicContent)
+		}
+
+		if err := db.SetMessagesModerated(ctx, db.GetDB(), messages); err != nil {
+			log.Printf("error setting messages as moderated: %v", err)
+		}
 	}
 }
-
 func getMessageTimestamp(db *sql.DB, messageID int64, groupID int64) (*time.Time, error) {
 	query := `SELECT timestamp FROM messages WHERE message_id = $1 AND chat_id = $2`
 	row := db.QueryRow(query, messageID, groupID)
 	var timestamp time.Time
 	if err := row.Scan(&timestamp); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, fmt.Errorf("message with ID %d not found in chat %d", messageID, groupID)
 		}
 		return nil, err
 	}
