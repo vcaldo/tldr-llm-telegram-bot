@@ -104,7 +104,7 @@ func FetchUnmoderatedMessages(ctx context.Context, db *sql.DB, chatID int64) ([]
 		FROM messages
 		WHERE chat_id = $1 AND moderated = false
 		ORDER BY timestamp ASC
-		LIMIT 1024`
+		LIMIT 256`
 
 	rows, err := db.QueryContext(ctx, query, chatID)
 	if err != nil {
