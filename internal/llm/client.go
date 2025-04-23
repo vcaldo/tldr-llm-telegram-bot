@@ -122,7 +122,6 @@ func (g *GeminiClient) AnalyzePrompt(nrApp *newrelic.Application, prompt string)
 	model.SetTopP(topP)
 	model.SetMaxOutputTokens(maxTokens)
 
-	// Add model settings as attributes
 	txn.AddAttribute("temperature", temperature)
 	txn.AddAttribute("top_k", topK)
 	txn.AddAttribute("top_p", topP)

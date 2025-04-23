@@ -19,22 +19,17 @@ type Bot struct {
 }
 
 func NewBot(ctx context.Context, config *config.Config, db *sql.DB, nrApp *newrelic.Application) (Bot, error) {
-	// Envolva o defaultHandler em um wrapper que inicia uma transação NR
 	instrumentedDefaultHandler := func(ctx context.Context, b *bot.Bot, update *models.Update) {
-		// Inicia a transação New Relic
 		txn := nrApp.StartTransaction("handler:default")
 		defer txn.End()
 
-		// Adiciona atributos úteis
 		if update.Message != nil {
 			txn.AddAttribute("chatID", update.Message.Chat.ID)
 			txn.AddAttribute("userID", update.Message.From.ID)
 		}
 
-		// Adiciona a transação ao contexto
 		ctxWithTxn := newrelic.NewContext(ctx, txn)
 
-		// Chama o handler original com o contexto instrumentado
 		defaultHandler(ctxWithTxn, b, update)
 	}
 
