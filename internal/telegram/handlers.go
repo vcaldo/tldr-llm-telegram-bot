@@ -15,6 +15,13 @@ import (
 )
 
 func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	// O contexto já contém a transação New Relic
+
+	// Para instrumentar operações específicas, extraia a transação do contexto
+	txn := newrelic.FromContext(ctx)
+
+	// Segmento para operações de log no DB
+	segDB := txn.StartSegment("db:log-message")
 	var err error
 	switch {
 	case update.Message != nil && update.Message.Text != "":
@@ -34,9 +41,15 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	default:
 		err = db.LogMessage(ctx, db.GetDB(), constants.MessageTypeGeneric, update, update.Message)
 	}
+	segDB.End()
+
 	if err != nil {
+		// Registre o erro na transação New Relic
+		txn.NoticeError(err)
 		log.Printf("error logging message: %v", err)
 	}
+
+	// ... resto do código ...
 }
 
 func tldrHandler(nrApp *newrelic.Application, llmClient llm.LLMClient, summaryPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
