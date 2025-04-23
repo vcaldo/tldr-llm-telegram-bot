@@ -32,15 +32,6 @@ services:
     networks:
       - monitoring
 
-  newrelic-postgres-integration:
-    image: newrelic/nri-postgresql
-    env_file:
-      - .nrenv
-    depends_on:
-      - postgres
-    networks:
-      - monitoring
-
 networks:
   monitoring:
     driver: bridge
