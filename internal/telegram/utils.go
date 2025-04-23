@@ -14,19 +14,21 @@ func formatTextMessages(messages []db.Message) string {
 		if msg.MessageType == constants.MessageTypeText {
 			if msg.ReplyToMessageID != nil {
 				formattedMessages += fmt.Sprintf(
-					"%s %d %s replied to %d: %s\n",
+					"%s %d %s %s replied to %d: %s\n",
 					msg.Timestamp.Format("2006-01-02 15:04:05"),
 					msg.MessageID,
-					msg.FirstName,
+					msg.DisplayName,
+					msg.Username,
 					*msg.ReplyToMessageID,
 					msg.Content,
 				)
 			} else {
 				formattedMessages += fmt.Sprintf(
-					"%s %d %s said: %s\n",
+					"%s %d %s %s said: %s\n",
 					msg.Timestamp.Format("2006-01-02 15:04:05"),
 					msg.MessageID,
-					msg.FirstName,
+					msg.DisplayName,
+					msg.Username,
 					msg.Content,
 				)
 			}
