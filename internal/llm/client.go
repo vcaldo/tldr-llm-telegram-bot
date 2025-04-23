@@ -82,7 +82,6 @@ func (g *GeminiClient) AnalyzePrompt(prompt string) (reponse string, err error) 
 	}
 	defer client.Close()
 
-	// Create the model
 	model := client.GenerativeModel(g.ModelName)
 
 	model.SetTemperature(0.9)

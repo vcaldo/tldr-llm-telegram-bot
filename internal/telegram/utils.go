@@ -46,7 +46,6 @@ func formatTextMessages(messages []db.Message) string {
 
 func SendLongMessage(ctx context.Context, b *bot.Bot, chatID int64, text string) {
 	if len(text) <= telegramMaxMessageLength {
-		// Envia a mensagem inteira se for menor ou igual ao limite
 		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID:    chatID,
 			Text:      text,

@@ -19,7 +19,6 @@ func LogMessage(ctx context.Context, db *sql.DB, MessageType string, update *mod
 		return err
 	}
 
-	// Check if the update is a reply to another message
 	var replyToMessageID *int64
 	if update.Message.ReplyToMessage != nil {
 		id := int64(update.Message.ReplyToMessage.ID)
@@ -28,7 +27,6 @@ func LogMessage(ctx context.Context, db *sql.DB, MessageType string, update *mod
 
 	displayName := getDisplayName(update)
 
-	// Convert Unix timestamp to time.Time
 	messageTime := time.Unix(int64(update.Message.Date), 0)
 
 	query := `
@@ -141,7 +139,7 @@ func FetchUnmoderatedMessages(ctx context.Context, db *sql.DB, chatID int64) ([]
 
 func SetMessagesModerated(ctx context.Context, db *sql.DB, messages []Message) error {
 	if len(messages) == 0 {
-		return nil // Nothing to update
+		return nil
 	}
 
 	var messageIDs []int64

@@ -109,7 +109,6 @@ func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string)
 			SendLongMessage(ctx, b, update.Message.Chat.ID, problematicContent)
 		}
 
-		// set the messages as moderated
 		if err := db.SetMessagesModerated(ctx, db.GetDB(), messages); err != nil {
 			log.Printf("error setting messages as moderated: %v", err)
 		}
