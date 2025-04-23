@@ -8,12 +8,16 @@ import (
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/constants"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/db"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/llm"
 )
 
 func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	txn := newrelic.FromContext(ctx)
+
+	segDB := txn.StartSegment("db:log-message")
 	var err error
 	switch {
 	case update.Message != nil && update.Message.Text != "":
@@ -33,16 +37,27 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	default:
 		err = db.LogMessage(ctx, db.GetDB(), constants.MessageTypeGeneric, update, update.Message)
 	}
+	segDB.End()
+
 	if err != nil {
+		txn.NoticeError(err)
 		log.Printf("error logging message: %v", err)
 	}
+
 }
 
-func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
+func tldrHandler(nrApp *newrelic.Application, llmClient llm.LLMClient, summaryPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 		if update.Message.Text == "" || update.Message.ReplyToMessage == nil {
 			return
 		}
+		txn := nrApp.StartTransaction("handler:tldr")
+		defer txn.End()
+
+		txn.AddAttribute("chatID", update.Message.Chat.ID)
+		txn.AddAttribute("userID", update.Message.From.ID)
+
+		ctxWithTxn := newrelic.NewContext(ctx, txn)
 
 		firstMessageTimestamp, err := getMessageTimestamp(db.GetDB(), int64(update.Message.ReplyToMessage.ID), update.Message.Chat.ID)
 		if err != nil {
@@ -50,7 +65,7 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 			return
 		}
 
-		messages, err := db.FetchMessagesSince(ctx, db.GetDB(), update.Message.Chat.ID, int64(update.Message.ReplyToMessage.ID), firstMessageTimestamp, 720*time.Minute)
+		messages, err := db.FetchMessagesSince(ctxWithTxn, db.GetDB(), update.Message.Chat.ID, int64(update.Message.ReplyToMessage.ID), firstMessageTimestamp, 720*time.Minute)
 		if err != nil {
 			log.Printf("error fetching messages: %v", err)
 			return
@@ -61,10 +76,14 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 			return
 		}
 
+		txn.AddAttribute("messagesCount", len(messages))
+
 		formattedMessages := formatTextMessages(messages)
 		prompt := fmt.Sprintf("%s %s", summaryPrompt, formattedMessages)
 
-		summary, err := llmClient.AnalyzePrompt(prompt)
+		txn.AddAttribute("promptLen", len(prompt))
+
+		summary, err := llmClient.AnalyzePrompt(nrApp, prompt)
 		if err != nil {
 			log.Printf("error generating summary: %v", err)
 			return
@@ -72,19 +91,28 @@ func tldrHandler(llmClient llm.LLMClient, summaryPrompt string) func(ctx context
 
 		log.Printf("generated summary: %s", summary)
 
-		SendLongMessage(ctx, b, update.Message.Chat.ID, summary)
+		SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, summary)
 	}
 }
 
-func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
+func problematicSpeechHandler(nrApp *newrelic.Application, llmClient llm.LLMClient, problematicPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 		if update.Message.Text == "" {
 			return
 		}
 
-		messages, err := db.FetchUnmoderatedMessages(ctx, db.GetDB(), update.Message.Chat.ID)
+		txn := nrApp.StartTransaction("handler:problematic-speech-moderation")
+		defer txn.End()
+
+		txn.AddAttribute("chatID", update.Message.Chat.ID)
+		txn.AddAttribute("userID", update.Message.From.ID)
+
+		ctxWithTxn := newrelic.NewContext(ctx, txn)
+
+		messages, err := db.FetchUnmoderatedMessages(ctxWithTxn, db.GetDB(), update.Message.Chat.ID)
 		if err != nil {
 			log.Printf("error fetching messages: %v", err)
+			txn.NoticeError(err)
 			return
 		}
 
@@ -93,29 +121,47 @@ func problematicSpeechHandler(llmClient llm.LLMClient, problematicPrompt string)
 			return
 		}
 
+		txn.AddAttribute("messagesCount", len(messages))
+
 		formattedMessages := formatTextMessages(messages)
 
 		prompt := fmt.Sprintf("%s %s", problematicPrompt, formattedMessages)
 
-		problematicContent, err := llmClient.AnalyzePrompt(prompt)
+		txn.AddAttribute("promptLen", len(prompt))
+
+		problematicContent, err := llmClient.AnalyzePrompt(nrApp, prompt)
 		if err != nil {
 			log.Printf("error generating problematic content: %v", err)
+			txn.NoticeError(err)
 			return
 		}
 
 		if len(problematicContent) > 4 {
-			SendLongMessage(ctx, b, update.Message.Chat.ID, problematicContent)
+			SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, problematicContent)
 		}
 
-		if err := db.SetMessagesModerated(ctx, db.GetDB(), messages); err != nil {
+		if err := db.SetMessagesModerated(ctxWithTxn, db.GetDB(), messages); err != nil {
 			log.Printf("error setting messages as moderated: %v", err)
+			txn.NoticeError(err)
 		}
 	}
 }
 
-func valueAssessment(llmClient llm.LLMClient, valueAssessmentPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
+func valueAssessment(nrApp *newrelic.Application, llmClient llm.LLMClient, valueAssessmentPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
-		db.LogMessage(ctx, db.GetDB(), constants.MessageTypeText, update, update.Message.Text)
+		txn := nrApp.StartTransaction("handler:value-assessment")
+		defer txn.End()
+
+		txn.AddAttribute("chatID", update.Message.Chat.ID)
+		txn.AddAttribute("userID", update.Message.From.ID)
+
+		ctxWithTxn := newrelic.NewContext(ctx, txn)
+
+		err := db.LogMessage(ctxWithTxn, db.GetDB(), constants.MessageTypeText, update, update.Message.Text)
+		if err != nil {
+			txn.NoticeError(err)
+			log.Printf("error logging message: %v", err)
+		}
 
 		if update.Message.Text == "" {
 			return
@@ -125,18 +171,15 @@ func valueAssessment(llmClient llm.LLMClient, valueAssessmentPrompt string) func
 
 		prompt := fmt.Sprintf("%s %s", valueAssessmentPrompt, update.Message.Text)
 
-		log.Printf("Generated prompt: %s", prompt)
+		txn.AddAttribute("promptLen", len(prompt))
 
-		valueAssessmentContent, err := llmClient.AnalyzePrompt(prompt)
-
-		log.Printf("Generated value assessment content: %s", valueAssessmentContent)
-
+		valueAssessmentContent, err := llmClient.AnalyzePrompt(nrApp, prompt)
 		if err != nil {
+			txn.NoticeError(err)
 			log.Printf("error generating value assessment content: %v", err)
 			return
 		}
 
-		SendLongMessage(ctx, b, update.Message.Chat.ID, valueAssessmentContent)
-
+		SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, valueAssessmentContent)
 	}
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/constants"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/db"
 )
@@ -59,33 +60,49 @@ func getMessageTimestamp(db *sql.DB, messageID int64, groupID int64) (*time.Time
 	return &timestamp, nil
 }
 
-func SendLongMessage(ctx context.Context, b *bot.Bot, chatID int64, text string) {
+func SendLongMessage(ctx context.Context, nrApp *newrelic.Application, b *bot.Bot, chatID int64, text string) {
+	txn := nrApp.StartTransaction("telegram:send-long-message")
+	defer txn.End()
+
+	txn.AddAttribute("chatID", chatID)
+	txn.AddAttribute("messageLength", len(text))
+
+	txnCtx := newrelic.NewContext(ctx, txn)
+
 	if len(text) <= telegramMaxMessageLength {
-		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		segment := txn.StartSegment("telegram:send-message")
+		if _, err := b.SendMessage(txnCtx, &bot.SendMessageParams{
 			ChatID:    chatID,
 			Text:      text,
 			ParseMode: models.ParseModeHTML,
 		}); err != nil {
+			txn.NoticeError(err)
 			log.Printf("error sending message %v", err)
 		}
+		segment.End()
 		return
 	}
 
 	runes := []rune(text)
 	for i := 0; i < len(runes); i += telegramMaxMessageLength {
+		segment := txn.StartSegment("telegram:send-message-chunk")
+
 		end := i + telegramMaxMessageLength
 		if end > len(runes) {
 			end = len(runes)
 		}
 		messageChunk := string(runes[i:end])
 
-		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		if _, err := b.SendMessage(txnCtx, &bot.SendMessageParams{
 			ChatID:    chatID,
 			Text:      messageChunk,
 			ParseMode: models.ParseModeHTML,
 		}); err != nil {
+			txn.NoticeError(err)
 			log.Printf("error sending message chunk: %v", err)
+			segment.End()
 			return
 		}
+		segment.End()
 	}
 }
