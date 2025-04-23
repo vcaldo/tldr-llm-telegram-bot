@@ -32,6 +32,7 @@ func (o *OllamaClient) AnalyzePrompt(nrApp *newrelic.Application, prompt string)
 
 	txn.AddAttribute("model", o.ModelName)
 	txn.AddAttribute("language", o.Language)
+	txn.AddAttribute("prompt_length", len(prompt))
 
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"model":  o.ModelName,
@@ -98,6 +99,7 @@ func (g *GeminiClient) AnalyzePrompt(nrApp *newrelic.Application, prompt string)
 
 	txn.AddAttribute("model", g.ModelName)
 	txn.AddAttribute("language", g.Language)
+	txn.AddAttribute("prompt_length", len(prompt))
 
 	ctx := context.Background()
 
@@ -110,10 +112,21 @@ func (g *GeminiClient) AnalyzePrompt(nrApp *newrelic.Application, prompt string)
 
 	model := client.GenerativeModel(g.ModelName)
 
-	model.SetTemperature(0.9)
-	model.SetTopK(40)
-	model.SetTopP(0.95)
-	model.SetMaxOutputTokens(4096)
+	var temperature float32 = 0.9
+	var topK int32 = 40
+	var topP float32 = 0.95
+	var maxTokens int32 = 4096
+
+	model.SetTemperature(temperature)
+	model.SetTopK(topK)
+	model.SetTopP(topP)
+	model.SetMaxOutputTokens(maxTokens)
+
+	// Add model settings as attributes
+	txn.AddAttribute("temperature", temperature)
+	txn.AddAttribute("top_k", topK)
+	txn.AddAttribute("top_p", topP)
+	txn.AddAttribute("max_tokens", maxTokens)
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -142,6 +155,12 @@ func (g *GeminiClient) AnalyzePrompt(nrApp *newrelic.Application, prompt string)
 
 	response = string(textResponse)
 	txn.AddAttribute("response_length", len(response))
+
+	txn.AddAttribute("candidate_count", len(resp.Candidates))
+	if len(resp.Candidates) > 0 && resp.Candidates[0].FinishReason > 0 {
+		txn.AddAttribute("finish_reason", resp.Candidates[0].FinishReason.String())
+	}
+
 	return response, nil
 }
 
