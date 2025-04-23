@@ -44,12 +44,10 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	segDB.End()
 
 	if err != nil {
-		// Registre o erro na transação New Relic
 		txn.NoticeError(err)
 		log.Printf("error logging message: %v", err)
 	}
 
-	// ... resto do código ...
 }
 
 func tldrHandler(nrApp *newrelic.Application, llmClient llm.LLMClient, summaryPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -87,6 +85,8 @@ func tldrHandler(nrApp *newrelic.Application, llmClient llm.LLMClient, summaryPr
 		formattedMessages := formatTextMessages(messages)
 		prompt := fmt.Sprintf("%s %s", summaryPrompt, formattedMessages)
 
+		txn.AddAttribute("promptLen", len(prompt))
+
 		summary, err := llmClient.AnalyzePrompt(nrApp, prompt)
 		if err != nil {
 			log.Printf("error generating summary: %v", err)
@@ -95,7 +95,7 @@ func tldrHandler(nrApp *newrelic.Application, llmClient llm.LLMClient, summaryPr
 
 		log.Printf("generated summary: %s", summary)
 
-		SendLongMessage(ctx, b, update.Message.Chat.ID, summary)
+		SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, summary)
 	}
 }
 
@@ -131,6 +131,8 @@ func problematicSpeechHandler(nrApp *newrelic.Application, llmClient llm.LLMClie
 
 		prompt := fmt.Sprintf("%s %s", problematicPrompt, formattedMessages)
 
+		txn.AddAttribute("promptLen", len(prompt))
+
 		problematicContent, err := llmClient.AnalyzePrompt(nrApp, prompt)
 		if err != nil {
 			log.Printf("error generating problematic content: %v", err)
@@ -139,7 +141,7 @@ func problematicSpeechHandler(nrApp *newrelic.Application, llmClient llm.LLMClie
 		}
 
 		if len(problematicContent) > 4 {
-			SendLongMessage(ctxWithTxn, b, update.Message.Chat.ID, problematicContent)
+			SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, problematicContent)
 		}
 
 		if err := db.SetMessagesModerated(ctxWithTxn, db.GetDB(), messages); err != nil {
@@ -151,7 +153,19 @@ func problematicSpeechHandler(nrApp *newrelic.Application, llmClient llm.LLMClie
 
 func valueAssessment(nrApp *newrelic.Application, llmClient llm.LLMClient, valueAssessmentPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
-		db.LogMessage(ctx, db.GetDB(), constants.MessageTypeText, update, update.Message.Text)
+		txn := nrApp.StartTransaction("value-assessment")
+		defer txn.End()
+
+		txn.AddAttribute("chatID", update.Message.Chat.ID)
+		txn.AddAttribute("userID", update.Message.From.ID)
+
+		ctxWithTxn := newrelic.NewContext(ctx, txn)
+
+		err := db.LogMessage(ctxWithTxn, db.GetDB(), constants.MessageTypeText, update, update.Message.Text)
+		if err != nil {
+			txn.NoticeError(err)
+			log.Printf("error logging message: %v", err)
+		}
 
 		if update.Message.Text == "" {
 			return
@@ -161,14 +175,15 @@ func valueAssessment(nrApp *newrelic.Application, llmClient llm.LLMClient, value
 
 		prompt := fmt.Sprintf("%s %s", valueAssessmentPrompt, update.Message.Text)
 
-		valueAssessmentContent, err := llmClient.AnalyzePrompt(nrApp, prompt)
+		txn.AddAttribute("promptLen", len(prompt))
 
+		valueAssessmentContent, err := llmClient.AnalyzePrompt(nrApp, prompt)
 		if err != nil {
+			txn.NoticeError(err)
 			log.Printf("error generating value assessment content: %v", err)
 			return
 		}
 
-		SendLongMessage(ctx, b, update.Message.Chat.ID, valueAssessmentContent)
-
+		SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, valueAssessmentContent)
 	}
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/constants"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/db"
 )
@@ -59,7 +60,7 @@ func getMessageTimestamp(db *sql.DB, messageID int64, groupID int64) (*time.Time
 	return &timestamp, nil
 }
 
-func SendLongMessage(ctx context.Context, b *bot.Bot, chatID int64, text string) {
+func SendLongMessage(ctx context.Context, nrApp *newrelic.Application, b *bot.Bot, chatID int64, text string) {
 	if len(text) <= telegramMaxMessageLength {
 		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID:    chatID,
