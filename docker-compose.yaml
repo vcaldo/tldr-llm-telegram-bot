@@ -20,21 +20,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    networks:
-      - monitoring
 
-  newrelic-infra:
-    image: newrelic/infrastructure:latest
-    container_name: newrelic-infra
-    env_file:
-      - .nrenv
-    privileged: true
-    networks:
-      - monitoring
-
-networks:
-  monitoring:
-    driver: bridge
 
 volumes:
   pgdata:
