@@ -28,5 +28,3 @@ go.work.sum
 # VS Code directory
 .vscode/
 
-# Prompts
-prompts.toml

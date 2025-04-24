@@ -9,7 +9,20 @@
 
 ## Customizable Prompts
 
-Each command's prompt can be customized by editing the `internal/llm/prompts/prompts.toml` file. This allows you to tailor the bot's responses to your specific needs. Without having to modify the code directly, you can adjust the prompts to better fit your use case.
+
+## Using External Prompt Files with Docker
+
+You can provide a custom prompts file from outside the container when running the bot with Docker. This allows you to override the embedded prompts without modifying the code.
+
+To do this, mount your external prompts directory as a Docker volume and set the `PROMPTS_PATH` environment variable to the mounted path. For example:
+
+```yaml
+    volumes:
+      - .prompts.toml:/app/prompts.toml
+      - .env:/app/.env
+```
+
+This setup ensures the bot uses your external prompt definitions instead of the defaults bundled in the container.
 
 ## Model Support
 
