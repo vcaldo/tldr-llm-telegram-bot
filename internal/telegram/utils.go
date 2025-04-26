@@ -10,8 +10,10 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/vcaldo/tldr-llm-telegram-bot/internal/config"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/constants"
 	"github.com/vcaldo/tldr-llm-telegram-bot/internal/db"
+	"github.com/vcaldo/tldr-llm-telegram-bot/internal/llm"
 )
 
 const telegramMaxMessageLength = 4096
@@ -105,4 +107,39 @@ func SendLongMessage(ctx context.Context, nrApp *newrelic.Application, b *bot.Bo
 		}
 		segment.End()
 	}
+}
+
+func LoadPrompts(llmClient *llm.LLMClient, config *config.Config) ([]string, error) {
+	err := llm.LoadPrompts(config.PromptsPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load prompts: %w", err)
+	}
+
+	var prompts []string
+
+	summaryPrompt, err := llm.GetPrompt("summary", config.Language)
+	if err != nil {
+		log.Fatalf("failed to get prompt: %v", err)
+	}
+	prompts = append(prompts, summaryPrompt)
+
+	problematicPrompt, err := llm.GetPrompt("problematic", config.Language)
+	if err != nil {
+		log.Fatalf("failed to get prompt: %v", err)
+	}
+	prompts = append(prompts, problematicPrompt)
+
+	valueAssessmentPrompt, err := llm.GetPrompt("value_assessment", config.Language)
+	if err != nil {
+		log.Fatalf("failed to get prompt: %v", err)
+	}
+	prompts = append(prompts, valueAssessmentPrompt)
+
+	sportsSchedulePrompt, err := llm.GetPrompt("sports_schedule", config.Language)
+	if err != nil {
+		log.Fatalf("failed to get prompt: %v", err)
+	}
+	prompts = append(prompts, sportsSchedulePrompt)
+
+	return prompts, nil
 }

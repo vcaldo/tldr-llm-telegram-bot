@@ -68,27 +68,21 @@ func (b Bot) Start(ctx context.Context) error {
 		return err
 	}
 
-	llm.LoadPrompts(config.PromptsPath)
-
-	summaryPrompt, err := llm.GetPrompt("summary", config.Language)
+	prompts, err := LoadPrompts(&llmClient, config)
 	if err != nil {
-		log.Fatalf("Failed to get prompt: %v", err)
+		log.Fatalf("failed to load prompts: %v", err)
 	}
 
-	problematicPrompt, err := llm.GetPrompt("problematic", config.Language)
-	if err != nil {
-		log.Fatalf("Failed to get prompt: %v", err)
-	}
-
-	valueAssessmentPrompt, err := llm.GetPrompt("value_assessment", config.Language)
-	if err != nil {
-		log.Fatalf("Failed to get prompt: %v", err)
-	}
+	summaryPrompt := prompts[0]
+	problematicPrompt := prompts[1]
+	valueAssessmentPrompt := prompts[2]
+	sportsSchedulePrompt := prompts[3]
 
 	// Register commands
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/tldr", bot.MatchTypePrefix, tldrHandler(b.Nrapp, llmClient, summaryPrompt))
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/problematic", bot.MatchTypePrefix, problematicSpeechHandler(b.Nrapp, llmClient, problematicPrompt))
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/valeapena", bot.MatchTypePrefix, valueAssessment(b.Nrapp, llmClient, valueAssessmentPrompt))
+	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/futebol", bot.MatchTypePrefix, sportsScheduleHandler(b.Nrapp, llmClient, sportsSchedulePrompt))
 
 	b.client.Start(ctxWithTxn)
 	return nil
