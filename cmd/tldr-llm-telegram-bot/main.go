@@ -44,6 +44,9 @@ func main() {
 		return
 	}
 
+	c := cron.New()
+	c.Ad
+
 	log.Println("bot started")
 	bot.Start(ctx)
 	defer log.Println("bot stopped")

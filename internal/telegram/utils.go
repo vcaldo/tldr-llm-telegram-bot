@@ -143,3 +143,26 @@ func LoadPrompts(llmClient *llm.LLMClient, config *config.Config) ([]string, err
 
 	return prompts, nil
 }
+
+func processProblematicMessages(ctx context.Context, llmClient *llm.LLMClient, db *sql.DB, nrApp *newrelic.Application) string {
+	txn := nrApp.StartTransaction("telegram:process-problematic-messages")
+	defer txn.End()
+
+	txn.AddAttribute("chatID", chatID)
+	txn.AddAttribute("userID", userID)
+
+	ctxWithTxn := newrelic.NewContext(ctx, txn)
+
+	prompt := fmt.Sprintf("%s %s", problematicPrompt, update.Message.Text)
+
+	txn.AddAttribute("promptLen", len(prompt))
+
+	problematicContent, err := llmClient.AnalyzePrompt(nrApp, prompt)
+	if err != nil {
+		txn.NoticeError(err)
+		log.Printf("error generating problematic content: %v", err)
+		return
+	}
+
+	SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, problematicContent)
+}
