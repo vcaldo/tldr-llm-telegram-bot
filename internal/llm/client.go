@@ -113,7 +113,7 @@ func (g *GeminiClient) AnalyzePrompt(nrApp *newrelic.Application, prompt string)
 	model := client.GenerativeModel(g.ModelName)
 
 	var temperature float32 = 0.9
-	var topK int32 = 40
+	var topK int32 = 30
 	var topP float32 = 0.95
 	var maxTokens int32 = 4096
 

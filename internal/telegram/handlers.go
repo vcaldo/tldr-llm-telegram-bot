@@ -183,3 +183,40 @@ func valueAssessment(nrApp *newrelic.Application, llmClient llm.LLMClient, value
 		SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, valueAssessmentContent)
 	}
 }
+
+func sportsScheduleHandler(nrApp *newrelic.Application, llmClient llm.LLMClient, sportsSchedulePrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
+	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
+		txn := nrApp.StartTransaction("handler:sports-schedule")
+		defer txn.End()
+
+		txn.AddAttribute("chatID", update.Message.Chat.ID)
+		txn.AddAttribute("userID", update.Message.From.ID)
+
+		ctxWithTxn := newrelic.NewContext(ctx, txn)
+
+		err := db.LogMessage(ctxWithTxn, db.GetDB(), constants.MessageTypeText, update, update.Message.Text)
+		if err != nil {
+			txn.NoticeError(err)
+			log.Printf("error logging message: %v", err)
+		}
+
+		if update.Message.Text == "" {
+			return
+		}
+
+		log.Printf("Received message: %s", update.Message.Text)
+
+		prompt := fmt.Sprintf("%s %s", sportsSchedulePrompt, update.Message.Text)
+
+		txn.AddAttribute("promptLen", len(prompt))
+
+		sportsScheduleContent, err := llmClient.AnalyzePrompt(nrApp, prompt)
+		if err != nil {
+			txn.NoticeError(err)
+			log.Printf("error generating sports schedule content: %v", err)
+			return
+		}
+
+		SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, sportsScheduleContent)
+	}
+}
