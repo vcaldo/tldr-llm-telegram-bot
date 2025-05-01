@@ -78,6 +78,7 @@ func SendLongMessage(ctx context.Context, nrApp *newrelic.Application, b *bot.Bo
 			Text:      text,
 			ParseMode: models.ParseModeHTML,
 		}); err != nil {
+			txn.AddAttribute("message", text)
 			txn.NoticeError(err)
 			log.Printf("error sending message %v", err)
 		}
@@ -100,6 +101,7 @@ func SendLongMessage(ctx context.Context, nrApp *newrelic.Application, b *bot.Bo
 			Text:      messageChunk,
 			ParseMode: models.ParseModeHTML,
 		}); err != nil {
+			txn.AddAttribute("messageChunk", messageChunk)
 			txn.NoticeError(err)
 			log.Printf("error sending message chunk: %v", err)
 			segment.End()
