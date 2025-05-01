@@ -21,7 +21,7 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	var err error
 	switch {
 	case update.Message != nil && update.Message.Text != "":
-		err = db.LogMessage(ctx, db.GetDB(), constants.MessageTypeText, update, update.Message.Text)
+		err = db.LogMessage(ctx, db.GetDB(), constants.MessageTypeText, update, sanitizeHTMLContent(update.Message.Text))
 	case update.Message != nil && update.Message.Voice != nil:
 		err = db.LogMessage(ctx, db.GetDB(), constants.MessageTypeVoice, update, update.Message.Voice)
 	case update.Message != nil && update.Message.Photo != nil:

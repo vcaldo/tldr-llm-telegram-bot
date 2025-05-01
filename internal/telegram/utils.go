@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"html"
 	"log"
 	"time"
 
@@ -144,4 +145,9 @@ func LoadPrompts(llmClient *llm.LLMClient, config *config.Config) ([]string, err
 	prompts = append(prompts, sportsSchedulePrompt)
 
 	return prompts, nil
+}
+
+func sanitizeHTMLContent(content string) string {
+	sanitized := html.EscapeString(content)
+	return sanitized
 }
