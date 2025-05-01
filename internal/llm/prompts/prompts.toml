@@ -38,7 +38,7 @@ Sua tarefa é ler uma conversa do Telegram e gerar um resumo com os seguintes cr
 <context>
 - O formato das mensagens da conversa será:
     - Linha comum: `2025-04-21 00:44:28 124 José @jose_luis disse: Bom dia a todos`
-    - Linha com resposta: `2025-04-21 00:45:31 125 Tentativa @jpcs respondeu 124: Bom dia José, eu não tenho energia pra fazer nada. Eu sou muito indisciplinado.`
+    - Linha com resposta: `2025-04-21 00:45:31 125 Tentativa @jp respondeu 124: Bom dia José, eu não tenho energia pra fazer nada. Eu sou muito indisciplinado.`
 - Sempre que houver "respondeu X:", considere o contexto da mensagem original.
 </context>
 
