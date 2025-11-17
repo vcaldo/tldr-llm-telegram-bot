@@ -663,6 +663,28 @@ pt = '''
 - Use apenas tags HTML aceitas no Telegram: `<b>`, `<i>`, `<u>`, `<a>`.
 - Não inclua `<html>`, `<body>`, nem estrutura extra.
 - Não escreva saudações ou assinaturas.
-- A análise deve ser impessoal, direta e com foco exclusivo no conteúdo.
 </format>
+<instructions>
+Responda em português de forma concisa. Seja direto ao ponto, mas se o tema for complexo, pode elaborar respostas mais extensas. Se necessário, utilize frases curtas e objetivas.
+</instructions>
+'''
+en = '''
+<format>
+- Use only Telegram-accepted HTML tags: `<b>`, `<i>`, `<u>`, `<a>`.
+- Do not include `<html>`, `<body>`, or any extra structure.
+- Do not write greetings or signatures.
+</format>
+<instructions>
+Answer in English concisely. Keep the response short — at most 3–4 complete sentences. Avoid long explanations, extensive examples, or step-by-step instructions; be direct and use short, objective sentences.
+</instructions>
+'''
+es = '''
+<format>
+- Use solo etiquetas HTML aceptadas por Telegram: `<b>`, `<i>`, `<u>`, `<a>`.
+- No incluyas `<html>`, `<body>` ni estructura adicional.
+- No escribas saludos ni firmas.
+</format>
+<instructions>
+Responde en español de forma concisa. Mantén la respuesta breve — como máximo 3–4 frases completas. Evita explicaciones largas, ejemplos extensos o pasos detallados; sé directo y utiliza oraciones cortas y objetivas.
+</instructions>
 '''
