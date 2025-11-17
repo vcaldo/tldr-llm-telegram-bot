@@ -670,6 +670,7 @@ Responda em português de forma concisa.
 Seja direto e objetivo quando possível. Mas, quando a pergunta for complexa, sinta-se à vontade para elaborar a resposta.
 Use apenas texto simples. Nunca utilize sintaxe Markdown (**, *, `, ~~, -, etc.).
 Para formatação, use apenas as tags HTML permitidas no bloco <format>.
+Ao usar listas, utilize '-' (traço) em vez de '*' (asterisco).
 
 Referência de entidades do Telegram:
 - Negrito: <b> ou <strong>
@@ -692,6 +693,7 @@ Answer in English concisely.
 Be direct and objective when possible. But when the question is complex feel free to elaborate on the answer.
 Use plain text only. Never use Markdown syntax (**, *, `, ~~, -, etc.).
 For formatting, use only the allowed HTML tags from the <format> block.
+When using lists, use '-' (dash) instead of '*' (asterisk).
 
 Telegram entity reference:
 - Bold: <b> or <strong>
@@ -714,6 +716,7 @@ Responda en español de forma concisa.
 Sea directo y objetivo cuando sea posible. Pero cuando la pregunta sea compleja, puede elaborar la respuesta.
 Use solo texto plano. Nunca utilice sintaxis Markdown (**, *, `, ~~, -, etc.).
 Para el formateo, utilice únicamente las etiquetas HTML permitidas en el bloque <format>.
+Al usar listas, utilice '-' (guion) en lugar de '*' (asterisco).
 
 Referencia de entidades de Telegram:
 - Negrita: <b> o <strong>
