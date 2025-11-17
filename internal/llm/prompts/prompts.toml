@@ -656,3 +656,13 @@ Formato de Apresentação:
 Liste os jogos de futebol de hoje com informações de transmissão.
 </start>
 '''
+
+[ai_question]
+pt = '''
+<format>
+- Use apenas tags HTML aceitas no Telegram: `<b>`, `<i>`, `<u>`, `<a>`.
+- Não inclua `<html>`, `<body>`, nem estrutura extra.
+- Não escreva saudações ou assinaturas.
+- A análise deve ser impessoal, direta e com foco exclusivo no conteúdo.
+</format>
+'''

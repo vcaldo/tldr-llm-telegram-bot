@@ -11,6 +11,7 @@ type Prompts struct {
 	Problematic     map[string]string `toml:"problematic"`
 	ValueAssessment map[string]string `toml:"value_assessment"`
 	SportsSchedule  map[string]string `toml:"sports_schedule"`
+	AiQuestion      map[string]string `toml:"ai_question"`
 }
 
 var prompts Prompts
@@ -38,6 +39,10 @@ func GetPrompt(category, lang string) (string, error) {
 		}
 	case "sports_schedule":
 		if prompt, ok := prompts.SportsSchedule[lang]; ok {
+			return prompt, nil
+		}
+	case "ai_question":
+		if prompt, ok := prompts.AiQuestion[lang]; ok {
 			return prompt, nil
 		}
 	}
