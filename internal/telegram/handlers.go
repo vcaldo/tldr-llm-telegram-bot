@@ -221,7 +221,7 @@ func sportsScheduleHandler(nrApp *newrelic.Application, llmClient llm.LLMClient,
 	}
 }
 
-func aiQuestionHandler(nrApp *newrelic.Application) func(ctx context.Context, b *bot.Bot, update *models.Update) {
+func aiQuestionHandler(nrApp *newrelic.Application, llmClient llm.LLMClient) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 		if update.Message == nil || update.Message.Text == "" {
 			return
@@ -265,8 +265,16 @@ func aiQuestionHandler(nrApp *newrelic.Application) func(ctx context.Context, b 
 			txn.NoticeError(err)
 		}
 
-		// Echo back the question. Future improvement: forward to LLM client and reply with AI answer.
-		reply := fmt.Sprintf("You asked: %s", question)
-		SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, reply)
+		// Forward question to LLM and send back its response.
+		// Build a simple prompt: the question itself. Optionally could add system instructions here.
+		response, err := llmClient.AnalyzePrompt(nrApp, question)
+		if err != nil {
+			txn.NoticeError(err)
+			log.Printf("error generating AI response: %v", err)
+			SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, "Sorry, I couldn't get an answer right now.")
+			return
+		}
+
+		SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, response)
 	}
 }
