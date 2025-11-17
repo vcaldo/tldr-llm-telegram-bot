@@ -77,13 +77,14 @@ func (b Bot) Start(ctx context.Context) error {
 	problematicPrompt := prompts[1]
 	valueAssessmentPrompt := prompts[2]
 	sportsSchedulePrompt := prompts[3]
+	aiQuestionPrompt := prompts[4]
 
 	// Register commands
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/tldr", bot.MatchTypePrefix, tldrHandler(b.Nrapp, llmClient, summaryPrompt))
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/problematic", bot.MatchTypePrefix, problematicSpeechHandler(b.Nrapp, llmClient, problematicPrompt))
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/valeapena", bot.MatchTypePrefix, valueAssessment(b.Nrapp, llmClient, valueAssessmentPrompt))
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/futebol", bot.MatchTypePrefix, sportsScheduleHandler(b.Nrapp, llmClient, sportsSchedulePrompt))
-	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/ai", bot.MatchTypePrefix, aiQuestionHandler(b.Nrapp, llmClient))
+	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/ai", bot.MatchTypePrefix, aiQuestionHandler(b.Nrapp, llmClient, aiQuestionPrompt))
 
 	b.client.Start(ctxWithTxn)
 	return nil

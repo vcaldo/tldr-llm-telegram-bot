@@ -221,7 +221,7 @@ func sportsScheduleHandler(nrApp *newrelic.Application, llmClient llm.LLMClient,
 	}
 }
 
-func aiQuestionHandler(nrApp *newrelic.Application, llmClient llm.LLMClient) func(ctx context.Context, b *bot.Bot, update *models.Update) {
+func aiQuestionHandler(nrApp *newrelic.Application, llmClient llm.LLMClient, aiPrompt string) func(ctx context.Context, b *bot.Bot, update *models.Update) {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 		if update.Message == nil || update.Message.Text == "" {
 			return
@@ -265,9 +265,14 @@ func aiQuestionHandler(nrApp *newrelic.Application, llmClient llm.LLMClient) fun
 			txn.NoticeError(err)
 		}
 
+		// Build final prompt: if aiPrompt is provided, prepend it to the user's question.
+		finalPrompt := question
+		if aiPrompt != "" {
+			finalPrompt = fmt.Sprintf("%s\n%s", aiPrompt, question)
+		}
+
 		// Forward question to LLM and send back its response.
-		// Build a simple prompt: the question itself. Optionally could add system instructions here.
-		response, err := llmClient.AnalyzePrompt(nrApp, question)
+		response, err := llmClient.AnalyzePrompt(nrApp, finalPrompt)
 		if err != nil {
 			txn.NoticeError(err)
 			log.Printf("error generating AI response: %v", err)

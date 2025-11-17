@@ -144,6 +144,15 @@ func LoadPrompts(llmClient *llm.LLMClient, config *config.Config) ([]string, err
 	}
 	prompts = append(prompts, sportsSchedulePrompt)
 
+	aiQuestionPrompt, err := llm.GetPrompt("ai_question", config.Language)
+	if err != nil {
+		// If ai_question is not provided, fall back to an empty prompt so the handler
+		// can still function by sending the raw question.
+		aiQuestionPrompt = ""
+	} else {
+		prompts = append(prompts, aiQuestionPrompt)
+	}
+
 	return prompts, nil
 }
 
