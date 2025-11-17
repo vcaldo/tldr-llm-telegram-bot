@@ -660,58 +660,67 @@ Liste os jogos de futebol de hoje com informações de transmissão.
 [ai_question]
 pt = '''
 <format>
-- Use apenas tags HTML aceitas no Telegram: `<b>`, `<i>`, `<u>`, `<a>`.
-- Não inclua `<html>`, `<body>`, nem estrutura extra.
-- Não escreva saudações ou assinaturas.
+Use apenas as tags HTML aceitas pelo Telegram: <b>, <i>, <u>, <a>
+Não use <html>, <body> ou quaisquer tags estruturais.
+Não inclua saudações ou assinaturas.
 </format>
+
 <instructions>
-Responda em português de forma concisa. Seja direto ao ponto, mas se o tema for complexo, pode elaborar respostas mais extensas. Se necessário, utilize frases curtas e objetivas.
-Evite usar marcação estilo Markdown (por exemplo `*asteriscos*`, listas com `*` ou `-`, backticks `\`` ou similar). Use apenas texto plano e, se precisar de formatação, utilize as tags HTML permitidas listadas no <format>.
-\n
-Mapeamento de entidades (exemplos de aliases):
-messageEntityBold => <b>bold</b>, <strong>bold</strong>, **bold**
-messageEntityItalic => <i>italic</i>, <em>italic</em>, *italic*
-messageEntityCode => <code>code</code>, `code`
-messageEntityStrike => <s>strike</s>, <strike>strike</strike>, <del>strike</del>, ~~strike~~
-messageEntityUnderline => <u>underline</u>
-messageEntityPre => <pre language="c++">code</pre>
+Responda em português de forma concisa.
+Seja direto e objetivo quando possível. Mas, quando a pergunta for complexa, sinta-se à vontade para elaborar a resposta.
+Use apenas texto simples. Nunca utilize sintaxe Markdown (**, *, `, ~~, -, etc.).
+Para formatação, use apenas as tags HTML permitidas no bloco <format>.
+
+Referência de entidades do Telegram:
+- Negrito: <b> ou <strong>
+- Itálico: <i> ou <em>
+- Código: <code>
+- Tachado: <s>, <strike> ou <del>
+- Sublinhado: <u>
+- Bloco de código: <pre language="languagename">
 </instructions>
 '''
 en = '''
 <format>
-- Use only Telegram-accepted HTML tags: `<b>`, `<i>`, `<u>`, `<a>`.
-- Do not include `<html>`, `<body>`, or any extra structure.
-- Do not write greetings or signatures.
+Use only these Telegram-accepted HTML tags: <b>, <i>, <u>, <a>
+Do not use <html>, <body>, or any structural tags.
+Do not include greetings or signatures.
 </format>
-<instructions>
-Answer in English concisely. Keep the response short — at most 3–4 complete sentences. Avoid long explanations, extensive examples, or step-by-step instructions; be direct and use short, objective sentences.
-Avoid Markdown-style markup (for example `*asterisks*`, list bullets like `*` or `-`, backticks `\`` or similar). Use plain text only and, if formatting is needed, use only the allowed HTML tags from the <format> block.
 
-Entity mapping (alias examples):
-messageEntityBold => <b>bold</b>, <strong>bold</strong>, **bold**
-messageEntityItalic => <i>italic</i>, <em>italic</em>, *italic*
-messageEntityCode => <code>code</code>, `code`
-messageEntityStrike => <s>strike</s>, <strike>strike</strike>, <del>strike</del>, ~~strike~~
-messageEntityUnderline => <u>underline</u>
-messageEntityPre => <pre language="c++">code</pre>
+<instructions>
+Answer in English concisely.
+Be direct and objective when possible. But when the question is complex feel free to elaborate on the answer.
+Use plain text only. Never use Markdown syntax (**, *, `, ~~, -, etc.).
+For formatting, use only the allowed HTML tags from the <format> block.
+
+Telegram entity reference:
+- Bold: <b> or <strong>
+- Italic: <i> or <em>
+- Code: <code>
+- Strike: <s>, <strike>, or <del>
+- Underline: <u>
+- Code block: <pre language="languagename">
 </instructions>
 '''
 es = '''
 <format>
-- Use solo etiquetas HTML aceptadas por Telegram: `<b>`, `<i>`, `<u>`, `<a>`.
-- No incluyas `<html>`, `<body>` ni estructura adicional.
-- No escribas saludos ni firmas.
+Use solo las etiquetas HTML aceptadas por Telegram: <b>, <i>, <u>, <a>
+No use <html>, <body> ni ninguna etiqueta estructural.
+No incluya saludos ni firmas.
 </format>
-<instructions>
-Responde en español de forma concisa. Mantén la respuesta breve — como máximo 3–4 frases completas. Evita explicaciones largas, ejemplos extensos o pasos detallados; sé directo y utiliza oraciones cortas y objetivas.
-Evita usar marcado estilo Markdown (por ejemplo `*asteriscos*`, viñetas con `*` o `-`, backticks `\`` o similares). Usa solo texto plano y, si necesitas formato, utiliza únicamente las etiquetas HTML permitidas en el bloque <format>.
 
-Mapeo de entidades (ejemplos de alias):
-messageEntityBold => <b>bold</b>, <strong>bold</strong>, **bold**
-messageEntityItalic => <i>italic</i>, <em>italic</em>, *italic*
-messageEntityCode => <code>code</code>, `code`
-messageEntityStrike => <s>strike</s>, <strike>strike</strike>, <del>strike</del>, ~~strike~~
-messageEntityUnderline => <u>underline</u>
-messageEntityPre => <pre language="c++">code</pre>
+<instructions>
+Responda en español de forma concisa.
+Sea directo y objetivo cuando sea posible. Pero cuando la pregunta sea compleja, puede elaborar la respuesta.
+Use solo texto plano. Nunca utilice sintaxis Markdown (**, *, `, ~~, -, etc.).
+Para el formateo, utilice únicamente las etiquetas HTML permitidas en el bloque <format>.
+
+Referencia de entidades de Telegram:
+- Negrita: <b> o <strong>
+- Cursiva: <i> o <em>
+- Código: <code>
+- Tachado: <s>, <strike> o <del>
+- Subrayado: <u>
+- Bloque de código: <pre language="languagename">
 </instructions>
 '''
