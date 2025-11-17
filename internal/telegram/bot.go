@@ -83,6 +83,7 @@ func (b Bot) Start(ctx context.Context) error {
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/problematic", bot.MatchTypePrefix, problematicSpeechHandler(b.Nrapp, llmClient, problematicPrompt))
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/valeapena", bot.MatchTypePrefix, valueAssessment(b.Nrapp, llmClient, valueAssessmentPrompt))
 	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/futebol", bot.MatchTypePrefix, sportsScheduleHandler(b.Nrapp, llmClient, sportsSchedulePrompt))
+	b.client.RegisterHandler(bot.HandlerTypeMessageText, "/ai", bot.MatchTypePrefix, aiQuestionHandler(b.Nrapp))
 
 	b.client.Start(ctxWithTxn)
 	return nil

@@ -220,3 +220,53 @@ func sportsScheduleHandler(nrApp *newrelic.Application, llmClient llm.LLMClient,
 		SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, sportsScheduleContent)
 	}
 }
+
+func aiQuestionHandler(nrApp *newrelic.Application) func(ctx context.Context, b *bot.Bot, update *models.Update) {
+	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
+		if update.Message == nil || update.Message.Text == "" {
+			return
+		}
+
+		txn := nrApp.StartTransaction("handler:ai-question")
+		defer txn.End()
+
+		txn.AddAttribute("chatID", update.Message.Chat.ID)
+		txn.AddAttribute("userID", update.Message.From.ID)
+
+		ctxWithTxn := newrelic.NewContext(ctx, txn)
+
+		// Expect command like: "/ai how does X work?"
+		text := update.Message.Text
+
+		// Remove the command prefix. We support both "/ai" and "/ai@BotUser" forms.
+		// The library registers this handler by prefix so the command itself will be
+		// at the start of the text.
+		question := text
+		if len(text) > 3 {
+			// strip '/ai ' (3 chars) if present. Also handle when command is longer like '/ai@BotName'
+			// find first space and take the remainder
+			for i, r := range text {
+				if r == ' ' {
+					question = text[i+1:]
+					break
+				}
+			}
+		} else {
+			// no question provided
+			question = ""
+		}
+
+		if question == "" {
+			return
+		}
+
+		// Log the incoming message to DB as text
+		if err := db.LogMessage(ctxWithTxn, db.GetDB(), constants.MessageTypeText, update, sanitizeHTMLContent(update.Message.Text)); err != nil {
+			txn.NoticeError(err)
+		}
+
+		// Echo back the question. Future improvement: forward to LLM client and reply with AI answer.
+		reply := fmt.Sprintf("You asked: %s", question)
+		SendLongMessage(ctxWithTxn, nrApp, b, update.Message.Chat.ID, reply)
+	}
+}
